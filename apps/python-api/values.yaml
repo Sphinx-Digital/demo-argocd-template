@@ -1,0 +1,44 @@
+# ── Identité participant (personnalisé par create-demo-user.sh) ────────
+username: "placeholder"
+prenom:   "Participant"
+nom:      "Demo"
+domain:   "demo.sphinx-digital.com"
+
+# ── App Python Flask ──────────────────────────────────────────────────
+app:
+  image:    "python"
+  tag:      "3.12-slim"
+  port:     8000
+  replicas: 1
+
+  # Connexion Redis (service dans le même namespace)
+  redis:
+    host: "redis"
+    port: 6379
+
+  # Ressources
+  resources:
+    requests:
+      cpu:    "50m"
+      memory: "64Mi"
+    limits:
+      cpu:    "300m"
+      memory: "256Mi"
+
+# ── Ingress ──────────────────────────────────────────────────────────
+ingress:
+  enabled:          true
+  ingressClassName: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  tls: true
+
+# ── Security context (Kyverno compliant) ─────────────────────────────
+securityContext:
+  runAsNonRoot:             true
+  runAsUser:                1000
+  runAsGroup:               1000
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem:   false
+  capabilities:
+    drop: ["ALL"]

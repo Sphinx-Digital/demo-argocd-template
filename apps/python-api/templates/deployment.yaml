@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: python-api
+    demo-user: {{ .Values.username }}
+spec:
+  replicas: {{ .Values.app.replicas }}
+  selector:
+    matchLabels:
+      app: python-api
+  template:
+    metadata:
+      labels:
+        app: python-api
+        demo-user: {{ .Values.username }}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ .Values.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.securityContext.runAsGroup }}
+      containers:
+      - name: python-api
+        image: {{ .Values.app.image }}:{{ .Values.app.tag }}
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh", "/app/start.sh"]
+        ports:
+        - containerPort: {{ .Values.app.port }}
+          name: http
+        env:
+        - name: REDIS_HOST
+          value: {{ .Values.app.redis.host | quote }}
+        - name: REDIS_PORT
+          value: {{ .Values.app.redis.port | quote }}
+        - name: USERNAME
+          value: {{ .Values.username | quote }}
+        - name: PRENOM
+          value: {{ .Values.prenom | quote }}
+        resources:
+          requests:
+            cpu: {{ .Values.app.resources.requests.cpu }}
+            memory: {{ .Values.app.resources.requests.memory }}
+          limits:
+            cpu: {{ .Values.app.resources.limits.cpu }}
+            memory: {{ .Values.app.resources.limits.memory }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          readOnlyRootFilesystem: {{ .Values.securityContext.readOnlyRootFilesystem }}
+          capabilities:
+            drop: {{ .Values.securityContext.capabilities.drop | toJson }}
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.app.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.app.port }}
+          initialDelaySeconds: 15
+          periodSeconds: 10
+      volumes:
+      - name: app-code
+        configMap:
+          name: python-api-code
+          defaultMode: 0755

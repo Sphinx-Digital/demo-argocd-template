@@ -1,0 +1,36 @@
+# ── Identité participant (personnalisé par create-demo-user.sh) ────────
+username: "placeholder"
+prenom:   "Participant"
+nom:      "Demo"
+
+# ── Redis config ──────────────────────────────────────────────────────
+redis:
+  image: "redis"
+  tag:   "7.2-alpine"
+  port:  6379
+
+  # Pas de mot de passe pour la démo (réseau privé namespace)
+  password: ""
+
+  # Ressources (dans quota : 6 pods, 1 CPU, 1Gi RAM)
+  resources:
+    requests:
+      cpu:    "50m"
+      memory: "64Mi"
+    limits:
+      cpu:    "200m"
+      memory: "128Mi"
+
+  # Persistence désactivée (démo éphémère)
+  persistence:
+    enabled: false
+
+# ── Security context (Kyverno compliant) ─────────────────────────────
+securityContext:
+  runAsNonRoot: true
+  runAsUser:    999
+  runAsGroup:   999
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem:   false   # Redis a besoin d'écrire
+  capabilities:
+    drop: ["ALL"]

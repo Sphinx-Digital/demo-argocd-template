@@ -1,0 +1,16 @@
+Bonjour {{ .Values.prenom }} !
+
+Votre app est déployée via ArgoCD sur :
+  https://{{ .Values.ingress.host }}
+
+Pour modifier la page d'accueil :
+  1. Editez apps/nginx/values.yaml (homepage.message, homepage.color)
+  2. git add . && git commit -m "update" && git push
+  3. ArgoCD redéploie automatiquement en < 3 minutes
+
+Ressources allouées :
+  CPU     : {{ .Values.resources.requests.cpu }} → {{ .Values.resources.limits.cpu }}
+  Mémoire : {{ .Values.resources.requests.memory }} → {{ .Values.resources.limits.memory }}
+  Réplicas: {{ .Values.replicaCount }}
+
+sphinx-digital.com | Formations · Consulting · DevOps

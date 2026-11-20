@@ -1,0 +1,57 @@
+# =====================================================================
+#  Valeurs par défaut — modifiables par le stagiaire
+# =====================================================================
+
+# Nom affiché sur la page d'accueil (remplacé par create-demo-user.sh)
+username: "stagiaire"
+prenom: "Stagiaire"
+
+# Image nginx — registry autorisé par Kyverno (docker.io)
+image:
+  repository: docker.io/nginx
+  tag: "1.25-alpine"
+  pullPolicy: IfNotPresent
+
+# Nombre de réplicas (limité à 2 par ResourceQuota namespace)
+replicaCount: 1
+
+# Service
+service:
+  type: ClusterIP
+  port: 80
+
+# Ingress — hostname généré par create-demo-user.sh
+ingress:
+  enabled: true
+  className: nginx
+  host: "demo-app.training.sphinx-digital.com"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  tls: true
+
+# Ressources — dans les limites du ResourceQuota (500m CPU, 256Mi RAM)
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+# SecurityContext — requis par Kyverno (runAsNonRoot + drop ALL)
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 101        # nginx user dans l'image alpine
+  runAsGroup: 101
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [ALL]
+  seccompProfile:
+    type: RuntimeDefault
+
+# Page d'accueil personnalisée (injectée via ConfigMap)
+# Modifie le HTML ici et commite — ArgoCD redéploie automatiquement
+homepage:
+  title: "Demo Sphinx Digital"
+  message: "Modifie ce fichier et commite pour redéployer !"
+  color: "#38bdf8"

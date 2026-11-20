@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: python-api-code
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: python-api
+    demo-user: {{ .Values.username }}
+data:
+  app.py: |
+    #!/usr/bin/env python3
+    """
+    Sphinx Digital Demo API
+    API Flask minimaliste avec compteur Redis.
+    Modifiez ce fichier et poussez pour voir le déploiement automatique via ArgoCD !
+    """
+    import os
+    import redis
+    from flask import Flask, jsonify
+
+    app = Flask(__name__)
+
+    REDIS_HOST = os.environ.get("REDIS_HOST", "redis")
+    REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
+    USERNAME   = os.environ.get("USERNAME", "demo")
+    PRENOM     = os.environ.get("PRENOM", "Participant")
+
+    try:
+        r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+        r.ping()
+        redis_ok = True
+    except Exception:
+        redis_ok = False
+
+
+    @app.route("/")
+    def index():
+        return jsonify({
+            "message": f"Bonjour {PRENOM} !",
+            "user":    USERNAME,
+            "redis":   "connecté" if redis_ok else "non connecté",
+            "docs":    "https://flask.palletsprojects.com/",
+            "tip":     "Modifiez app.py et poussez pour redéployer automatiquement !"
+        })
+
+
+    @app.route("/count")
+    def count():
+        if not redis_ok:
+            return jsonify({"error": "Redis non disponible"}), 503
+        count = r.incr(f"visits:{USERNAME}")
+        return jsonify({"username": USERNAME, "visits": count})
+
+
+    @app.route("/health")
+    def health():
+        return jsonify({"status": "ok"}), 200
+
+
+    @app.route("/env")
+    def env():
+        return jsonify({
+            "python_version": os.popen("python3 --version").read().strip(),
+            "hostname":       os.uname().nodename,
+            "redis_host":     REDIS_HOST,
+            "redis_ok":       redis_ok
+        })
+
+
+    if __name__ == "__main__":
+        app.run(host="0.0.0.0", port=8000, debug=False)
+
+  requirements.txt: |
+    flask==3.0.3
+    redis==5.0.4
+    gunicorn==22.0.0
+
+  start.sh: |
+    #!/bin/sh
+    pip install -q -r /app/requirements.txt
+    exec gunicorn --bind 0.0.0.0:8000 --workers 2 app:app

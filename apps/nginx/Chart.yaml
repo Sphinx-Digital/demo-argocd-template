@@ -1,0 +1,13 @@
+apiVersion: v2
+name: nginx-demo
+description: App de démonstration Sphinx Digital — déployée via ArgoCD
+type: application
+version: 0.1.0
+appVersion: "1.25"
+keywords:
+  - nginx
+  - demo
+  - sphinx-digital
+maintainers:
+  - name: Sphinx Digital
+    url: https://sphinx-digital.com

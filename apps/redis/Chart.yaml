@@ -1,0 +1,6 @@
+apiVersion: v2
+name: redis-demo
+description: Redis cache pour démo Sphinx Digital
+type: application
+version: 0.1.0
+appVersion: "7.2"
